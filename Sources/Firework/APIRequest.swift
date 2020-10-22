@@ -68,3 +68,9 @@ public protocol DELETERequest: APIRequest {}
 public extension DELETERequest {
     static var httpMethod: HTTPMethod { return .delete }
 }
+
+// MARK: - DecodingRequest
+
+public protocol DecodingRequest: APIRequest {
+    associatedtype Response: Decodable
+}
