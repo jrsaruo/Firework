@@ -36,3 +36,35 @@ public extension APIRequest {
 public protocol Postable {
     var body: [String: Any] { get }
 }
+
+// MARK: - GETRequest
+
+public protocol GETRequest: APIRequest {}
+
+public extension GETRequest {
+    static var httpMethod: HTTPMethod { return .get }
+}
+
+// MARK: - POSTRequest
+
+public protocol POSTRequest: APIRequest, Postable {}
+
+public extension POSTRequest {
+    static var httpMethod: HTTPMethod { return .post }
+}
+
+// MARK: - PUTRequest
+
+public protocol PUTRequest: APIRequest, Postable {}
+
+public extension PUTRequest {
+    static var httpMethod: HTTPMethod { return .put }
+}
+
+// MARK: - PUTRequest
+
+public protocol DELETERequest: APIRequest {}
+
+public extension DELETERequest {
+    static var httpMethod: HTTPMethod { return .delete }
+}
