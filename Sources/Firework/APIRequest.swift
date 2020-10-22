@@ -32,3 +32,7 @@ public extension APIRequest {
         return urlComponents
     }
 }
+
+public protocol Postable {
+    var body: [String: Any] { get }
+}
