@@ -73,4 +73,14 @@ public extension DELETERequest {
 
 public protocol DecodingRequest: APIRequest {
     associatedtype Response: Decodable
+    
+    /// A decoder to be used when decoding to `Response`.
+    ///
+    /// If nil is returned, APIClient.defaultJSONDecoder is used.
+    /// The default value is nil.
+    static var preferredJSONDecoder: JSONDecoder? { get }
+}
+
+public extension DecodingRequest {
+    static var preferredJSONDecoder: JSONDecoder? { nil }
 }

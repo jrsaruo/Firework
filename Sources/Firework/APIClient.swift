@@ -15,6 +15,8 @@ public struct APIClient {
     /// A default decoder used to decode JSON in the `APIClient.send(_:, decodingCompletion:)` method.
     ///
     /// You can use this property when you want to use a common decoder in your app.
+    /// If you want to use a different decoder for each request,
+    /// implement the `preferredJSONDecoder` property in the request type that conforms to the `DecodingRequest` protocol.
     public static let defaultJSONDecoder = JSONDecoder()
     
     public static func send<Request: APIRequest>(_ request: Request,
@@ -41,7 +43,8 @@ public struct APIClient {
                 switch response.result {
                 case .success(let data):
                     do {
-                        let decoded = try defaultJSONDecoder.decode(Request.Response.self, from: data)
+                        let decoder = Request.preferredJSONDecoder ?? defaultJSONDecoder
+                        let decoded = try decoder.decode(Request.Response.self, from: data)
                         result = .success(decoded)
                     } catch {
                         result = .failure(error)
