@@ -20,17 +20,9 @@ public struct APIClient {
     public static let defaultJSONDecoder = JSONDecoder()
     
     public static func send<Request: APIRequest>(_ request: Request,
-                                                 completion: @escaping (Result<Void, Error>) -> Void) {
+                                                 completion: @escaping (Result<Data?, AFError>) -> Void) {
         request.alamofireRequest.response { response in
-            let result: Result<Void, Error>
-            defer { completion(result) }
-            
-            switch response.result {
-            case .success:
-                result = .success(())
-            case .failure(let error):
-                result = .failure(error)
-            }
+            completion(response.result)
         }
     }
     public static func send<Request: DecodingRequest>(_ request: Request,
