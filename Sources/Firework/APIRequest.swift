@@ -9,11 +9,12 @@ import Alamofire
 import Foundation
 
 public protocol APIRequest {
+    associatedtype StatusCodes: Sequence where StatusCodes.Element == Int
     static var httpMethod: HTTPMethod { get }
     var endpoint: Endpoint { get }
     var headers: HTTPHeaders? { get }
     var queryItems: [URLQueryItem]? { get }
-    var acceptableStatusCodes: Range<Int> { get }
+    var acceptableStatusCodes: StatusCodes { get }
 }
 
 public extension APIRequest {
