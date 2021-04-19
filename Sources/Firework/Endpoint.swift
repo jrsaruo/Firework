@@ -13,4 +13,9 @@ public struct Endpoint {
     public init(_ urlString: String) {
         self.urlString = urlString
     }
+    
+    @inlinable
+    public static func / (base: Endpoint, additionalPath: String) -> Endpoint {
+        return Endpoint(base.urlString + "/" + additionalPath)
+    }
 }
