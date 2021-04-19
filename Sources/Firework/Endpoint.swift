@@ -6,7 +6,7 @@
 //
 
 /// An API endpoint representation.
-public struct Endpoint {
+public struct Endpoint: Hashable {
     
     public let urlString: String
     
@@ -17,5 +17,14 @@ public struct Endpoint {
     @inlinable
     public static func / (base: Endpoint, additionalPath: String) -> Endpoint {
         return Endpoint(base.urlString + "/" + additionalPath)
+    }
+}
+
+// MARK: - ExpressibleByStringLiteral
+
+extension Endpoint: ExpressibleByStringLiteral {
+    
+    public init(stringLiteral: String) {
+        self.init(stringLiteral)
     }
 }
