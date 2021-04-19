@@ -26,7 +26,6 @@ public extension APIRequest {
     /// URL component to pass to Alamofire.
     var urlComponents: URLComponents {
         guard var urlComponents = URLComponents(string: endpoint.urlString) else {
-            print("Invalid endpoint:", endpoint.urlString)
             preconditionFailure("\(endpoint.urlString) is an invalid URL. Please check \(Self.self) endpoint.")
         }
         urlComponents.queryItems = queryItems
