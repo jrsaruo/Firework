@@ -19,12 +19,21 @@ public struct APIClient {
     /// implement the `preferredJSONDecoder` property in the request type that conforms to the `DecodingRequest` protocol.
     public static let defaultJSONDecoder = JSONDecoder()
     
+    /// Send a request and receive the simple response.
+    /// - Parameters:
+    ///   - request: An instance of the request type that conforms to the `APIRequest` protocol.
+    ///   - completion: The handler to be executed once the request has finished.
     public static func send<Request: APIRequest>(_ request: Request,
                                                  completion: @escaping (Result<Data?, AFError>) -> Void) {
         request.alamofireRequest.response { response in
             completion(response.result)
         }
     }
+    
+    /// Send a request and decode the response JSON.
+    /// - Parameters:
+    ///   - request: An instance of the request type that conforms to the `DecodingRequest` protocol.
+    ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public static func send<Request: DecodingRequest>(_ request: Request,
                                                       decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
         request.alamofireRequest
