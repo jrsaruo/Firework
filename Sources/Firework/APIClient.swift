@@ -10,8 +10,6 @@ import Foundation
 
 public struct APIClient {
     
-    private init() {}
-    
     /// A default decoder used to decode JSON in the `APIClient.send(_:, decodingCompletion:)` method.
     ///
     /// You can use this property when you want to use a common decoder in your app.
@@ -23,8 +21,8 @@ public struct APIClient {
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the `APIRequest` protocol.
     ///   - completion: The handler to be executed once the request has finished.
-    public static func send<Request: APIRequest>(_ request: Request,
-                                                 completion: @escaping (Result<Data?, AFError>) -> Void) {
+    public func send<Request: APIRequest>(_ request: Request,
+                                          completion: @escaping (Result<Data?, AFError>) -> Void) {
         request.alamofireRequest.response { response in
             completion(response.result)
         }
@@ -34,8 +32,8 @@ public struct APIClient {
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the `DecodingRequest` protocol.
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
-    public static func send<Request: DecodingRequest>(_ request: Request,
-                                                      decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
+    public func send<Request: DecodingRequest>(_ request: Request,
+                                               decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
         request.alamofireRequest
             .responseData { response in
                 let result: Result<Request.Response, Error>
@@ -44,7 +42,7 @@ public struct APIClient {
                 switch response.result {
                 case .success(let data):
                     do {
-                        let decoder = Request.preferredJSONDecoder ?? defaultJSONDecoder
+                        let decoder = Request.preferredJSONDecoder ?? APIClient.defaultJSONDecoder
                         let decoded = try decoder.decode(Request.Response.self, from: data)
                         result = .success(decoded)
                     } catch {
