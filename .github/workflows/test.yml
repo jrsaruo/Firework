@@ -1,0 +1,76 @@
+name: Test
+
+# Controls when the action will run. 
+on:
+  pull_request:
+  
+  # Allows to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  package: Firework
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test_on_macos:
+    runs-on: macos-latest
+    
+    env:
+      CODECOV_PATH: "./coverage.lcov"
+    
+    steps:
+      # Checks-out the repository under $GITHUB_WORKSPACE, so this job can access it
+      - uses: actions/checkout@v3
+      
+      - name: Build for macOS
+        run: swift build
+        
+      - name: Run tests on macOS
+        run: swift test --enable-code-coverage
+        
+      - name: Gather code coverage
+        run: >
+          xcrun llvm-cov export
+          .build/debug/${{ env.package }}PackageTests.xctest/Contents/MacOS/${{ env.package }}PackageTests
+          -instr-profile .build/debug/codecov/default.profdata
+          -ignore-filename-regex Tests
+          -format lcov
+          > ${{ env.CODECOV_PATH }}
+          
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ${{ env.CODECOV_PATH }}
+          fail_ci_if_error: true
+          verbose: true
+          
+  test_on_ios:
+    runs-on: macos-latest
+    
+    env:
+      IOS_SIMULATOR: "iPhone 13"
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build for iOS
+        run: xcodebuild build -scheme ${{ env.package }} -destination "name=${{ env.IOS_SIMULATOR }}"
+        
+      - name: Run tests on iOS
+        run: xcodebuild test -scheme ${{ env.package }} -destination "name=${{ env.IOS_SIMULATOR }}"
+        
+  test_on_tvos:
+    runs-on: macos-latest
+    
+    env:
+      TVOS_SIMULATOR: "Apple TV"
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build for tvOS
+        run: xcodebuild build -scheme ${{ env.package }} -destination "name=${{ env.TVOS_SIMULATOR }}"
+        
+      - name: Run tests on tvOS
+        run: xcodebuild test -scheme ${{ env.package }} -destination "name=${{ env.TVOS_SIMULATOR }}"
