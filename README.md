@@ -2,6 +2,8 @@
 
 Firework is a wrapper for [Alamofire](https://github.com/Alamofire/Alamofire).
 
+[![Test](https://github.com/jrsaruo/Firework/actions/workflows/test.yml/badge.svg)](https://github.com/jrsaruo/Firework/actions/workflows/test.yml) [![codecov](https://codecov.io/gh/jrsaruo/Firework/branch/main/graph/badge.svg?token=81ZI7GEBAR)](https://codecov.io/gh/jrsaruo/Firework)
+
 ## Requirements
 
 - iOS 10.0+ / macOS 10.12+ / tvOS 10.0+ / watchOS 3.0+

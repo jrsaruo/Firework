@@ -31,11 +31,4 @@ final class EndpointTests: XCTestCase {
         let endpoint = Endpoint("https://www.sample.com") / "some" / "api"
         XCTAssertEqual(endpoint, Endpoint("https://www.sample.com/some/api"))
     }
-    
-    static var allTests = [
-        ("testEquatable", testEquatable),
-        ("testExpressionByStringLiteral", testExpressionByStringLiteral),
-        ("testURLString", testURLString),
-        ("testJoiningOperator", testJoiningOperator)
-    ]
 }

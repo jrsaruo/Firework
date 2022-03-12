@@ -85,12 +85,4 @@ final class APIRequestTests: XCTestCase {
         let urlComponents = TestRequest().urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com?some-query=value")!)
     }
-    
-    static var allTests = [
-        ("testGETRequestProperties", testGETRequestProperties),
-        ("testPOSTRequestProperties", testPOSTRequestProperties),
-        ("testPUTRequestProperties", testPUTRequestProperties),
-        ("testDELETERequestProperties", testDELETERequestProperties),
-        ("testURLComponentsWithQueries", testURLComponentsWithQueries),
-    ]
 }
