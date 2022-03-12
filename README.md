@@ -41,7 +41,7 @@ struct HealthCheckRequest: GETRequest {
 
 // Send a request
 let request = HealthCheckRequest()
-APIClient.send(request) { result in
+AFClient.send(request) { result in
     switch result {
     case .success:
         print("Healthy!")
@@ -73,7 +73,7 @@ struct ProfileRequest: POSTRequest, DecodingRequest {
 
 // Send a request
 let request = ProfileRequest(userID: 100)
-APIClient.send(request, decodingCompletion: { result in
+AFClient.send(request, decodingCompletion: { result in
     switch result {
     case .success(let profile):
         // Type of `profile` is `Profile`
