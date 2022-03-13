@@ -53,7 +53,7 @@ final class HTTPClientTests: XCTestCase {
                 case .success(nil):
                     XCTFail("data should not be nil.")
                 case .failure(let error):
-                    XCTFail(error.localizedDescription)
+                    XCTFail("Unexpected error: \(error)")
                 }
             }
             wait(for: [expectation], timeout: 0.2)
@@ -120,7 +120,7 @@ final class HTTPClientTests: XCTestCase {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
-                        XCTFail(error.localizedDescription)
+                        XCTFail("Unexpected error: \(error)")
                     }
                 })
                 wait(for: [expectation], timeout: 0.2)
@@ -135,7 +135,7 @@ final class HTTPClientTests: XCTestCase {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
-                        XCTFail(error.localizedDescription)
+                        XCTFail("Unexpected error: \(error)")
                     }
                 })
                 wait(for: [expectation], timeout: 0.2)
@@ -156,7 +156,7 @@ final class HTTPClientTests: XCTestCase {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
-                        XCTFail(error.localizedDescription)
+                        XCTFail("Unexpected error: \(error)")
                     }
                 })
                 wait(for: [expectation], timeout: 0.2)
@@ -174,7 +174,7 @@ final class HTTPClientTests: XCTestCase {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
-                        XCTFail(error.localizedDescription)
+                        XCTFail("Unexpected error: \(error)")
                     }
                 })
                 wait(for: [expectation], timeout: 0.2)
@@ -195,7 +195,7 @@ final class HTTPClientTests: XCTestCase {
                 case .failure(DecodingError.keyNotFound(let codingKey, _)):
                     XCTAssertEqual(codingKey.stringValue, "someProperty")
                 case .failure(let error):
-                    XCTFail(error.localizedDescription)
+                    XCTFail("Unexpected error: \(error)")
                 }
             })
             wait(for: [expectation], timeout: 0.2)
