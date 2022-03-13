@@ -77,6 +77,35 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingGETRequestAsync_success() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let data = try await httpClient.send(SampleGETRequest())
+            let unwrapedData = try XCTUnwrap(data)
+            XCTAssertEqual(String(decoding: unwrapedData, as: UTF8.self), "dummy")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingGETRequestAsync_failure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let _ = try await httpClient.send(SampleGETRequest())
+            XCTFail("The request should fail.")
+        } catch {
+            XCTAssert(error is SampleError)
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
     // MARK: - Decoding tests
     
     private struct SampleResponse: Decodable {
@@ -225,5 +254,49 @@ final class HTTPClientTests: XCTestCase {
             wait(for: [expectation], timeout: 0.2)
             XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_success() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let sample = try await httpClient.send(SampleDecodingRequest())
+            XCTAssertEqual(sample.someProperty, "some property")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_decodingFailure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let _ = try await httpClient.send(SampleDecodingRequest())
+            XCTFail("The request should fail.")
+        } catch DecodingError.keyNotFound(let codingKey, _) {
+            XCTAssertEqual(codingKey.stringValue, "someProperty")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_requestFailure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let _ = try await httpClient.send(SampleDecodingRequest())
+            XCTFail("The request should fail.")
+        } catch {
+            XCTAssert(error is SampleError)
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
     }
 }
