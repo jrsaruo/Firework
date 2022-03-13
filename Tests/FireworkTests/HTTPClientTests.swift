@@ -40,23 +40,43 @@ final class HTTPClientTests: XCTestCase {
             var endpoint: Endpoint { "https://dummy.api/sample" }
         }
         
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        let expectation = expectation(description: "HTTP communication success")
-        httpClient.send(SampleGETRequest()) { result in
-            defer { expectation.fulfill() }
-            switch result {
-            case .success(let data?):
-                XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
-            case .success(nil):
-                XCTFail("data should not be nil.")
-            case .failure(let error):
-                XCTFail(error.localizedDescription)
+        XCTContext.runActivity(named: "Success") { _ in
+            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
+            assert(httpClient.adaptor.calledCount == 0)
+            
+            let expectation = expectation(description: "HTTP communication success")
+            httpClient.send(SampleGETRequest()) { result in
+                defer { expectation.fulfill() }
+                switch result {
+                case .success(let data?):
+                    XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
+                case .success(nil):
+                    XCTFail("data should not be nil.")
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
             }
+            wait(for: [expectation], timeout: 0.2)
+            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
-        wait(for: [expectation], timeout: 0.2)
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        XCTContext.runActivity(named: "Failure") { _ in
+            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+            assert(httpClient.adaptor.calledCount == 0)
+            
+            let expectation = expectation(description: "HTTP communication failure")
+            httpClient.send(SampleGETRequest()) { result in
+                defer { expectation.fulfill() }
+                switch result {
+                case .success:
+                    XCTFail("The request should fail.")
+                case .failure(let error):
+                    XCTAssert(error is SampleError)
+                }
+            }
+            wait(for: [expectation], timeout: 0.2)
+            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        }
     }
     
     func testSendingAndDecoding() {
@@ -159,6 +179,44 @@ final class HTTPClientTests: XCTestCase {
                 })
                 wait(for: [expectation], timeout: 0.2)
             }
+        }
+        
+        XCTContext.runActivity(named: "The decoding failure") { _ in
+            let invalidJSON = """
+            { "id": 10 }
+            """
+            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidJSON.utf8))))
+            let expectation = expectation(description: "HTTP communication success")
+            httpClient.send(Request(), decodingCompletion: { result in
+                defer { expectation.fulfill() }
+                switch result {
+                case .success:
+                    XCTFail("The decoding should fail.")
+                case .failure(DecodingError.keyNotFound(let codingKey, _)):
+                    XCTAssertEqual(codingKey.stringValue, "someProperty")
+                case .failure(let error):
+                    XCTFail(error.localizedDescription)
+                }
+            })
+            wait(for: [expectation], timeout: 0.2)
+        }
+        
+        XCTContext.runActivity(named: "The request failure") { _ in
+            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+            assert(httpClient.adaptor.calledCount == 0)
+            
+            let expectation = expectation(description: "HTTP communication failure")
+            httpClient.send(Request(), decodingCompletion: { result in
+                defer { expectation.fulfill() }
+                switch result {
+                case .success:
+                    XCTFail("The request should fail.")
+                case .failure(let error):
+                    XCTAssert(error is SampleError)
+                }
+            })
+            wait(for: [expectation], timeout: 0.2)
+            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
     }
 }
