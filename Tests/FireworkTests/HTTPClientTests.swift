@@ -108,7 +108,7 @@ final class HTTPClientTests: XCTestCase {
         { "some_property": "some property" }
         """
         
-        XCTContext.runActivity(named: "with shared configuration") { _ in
+        XCTContext.runActivity(named: "With shared configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
                 assert(httpClient.adaptor.calledCount == 0)
@@ -142,7 +142,7 @@ final class HTTPClientTests: XCTestCase {
             }
         }
         
-        XCTContext.runActivity(named: "with custom configuration") { _ in
+        XCTContext.runActivity(named: "With custom configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 let customConfiguration = HTTPClientConfiguration()
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .convertFromSnakeCase

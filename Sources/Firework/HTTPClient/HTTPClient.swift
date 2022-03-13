@@ -42,7 +42,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     /// Send a request and decode the response JSON.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``DecodingRequest`` protocol.
-    ///   - queue: The queue on which the completion handler is called. The default is `.main`.   
+    ///   - queue: The queue on which the completion handler is called. The default is `.main`.
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
