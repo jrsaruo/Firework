@@ -10,9 +10,9 @@ import XCTest
 
 final class HTTPClientTests: XCTestCase {
     
-    final class StubAdaptor: HTTPClientAdaptor {
+    private final class StubAdaptor: HTTPClientAdaptor {
         
-        var result: Result<Data, Error>
+        let result: Result<Data, Error>
         private(set) var calledCount = 0
         
         init(result: Result<Data, Error>) {
@@ -29,17 +29,15 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
-    private struct Sample: Decodable {
-        let someProperty: String
-    }
-    
     private struct SampleError: Error {}
     
+    // MARK: - Sending request tests
+    
+    private struct SampleGETRequest: GETRequest {
+        var endpoint: Endpoint { "https://dummy.api/sample" }
+    }
+    
     func testSendingGETRequest() {
-        struct SampleGETRequest: GETRequest {
-            var endpoint: Endpoint { "https://dummy.api/sample" }
-        }
-        
         XCTContext.runActivity(named: "Success") { _ in
             let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
             assert(httpClient.adaptor.calledCount == 0)
@@ -79,42 +77,83 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
-    func testSendingAndDecoding() {
-        struct Request: GETRequest, DecodingRequest {
-            typealias Response = Sample
-            var endpoint: Endpoint { "https://dummy.api/sample" }
-        }
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingGETRequestAsync_success() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
         
-        struct RequestUsingPreferredJSONDecoder: GETRequest, DecodingRequest {
-            typealias Response = Sample
-            var endpoint: Endpoint { "https://dummy.api/sample" }
-            
-            static let preferredJSONDecoder: JSONDecoder? = {
-                let decoder = JSONDecoder()
-                decoder.keyDecodingStrategy = .convertFromSnakeCase
-                return decoder
-            }()
+        do {
+            let data = try await httpClient.send(SampleGETRequest())
+            let unwrapedData = try XCTUnwrap(data)
+            XCTAssertEqual(String(decoding: unwrapedData, as: UTF8.self), "dummy")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
         }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingGETRequestAsync_failure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+        assert(httpClient.adaptor.calledCount == 0)
         
-        enum RequestType {
-            case defaultJSONDecoder, preferredJSONDecoder
+        do {
+            let _ = try await httpClient.send(SampleGETRequest())
+            XCTFail("The request should fail.")
+        } catch {
+            XCTAssert(error is SampleError)
         }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    // MARK: - Decoding tests
+    
+    private struct SampleResponse: Decodable {
+        let someProperty: String
+    }
+    
+    private struct SampleDecodingRequest: GETRequest, DecodingRequest {
+        typealias Response = SampleResponse
+        var endpoint: Endpoint { "https://dummy.api/sample/camel-case" }
+    }
+    
+    private struct SampleDecodingRequestPreferringSnakeCase: GETRequest, DecodingRequest {
+        typealias Response = SampleResponse
+        var endpoint: Endpoint { "https://dummy.api/sample/snake-case" }
         
-        let camelCaseJSON = """
+        static let preferredJSONDecoder: JSONDecoder? = {
+            let decoder = JSONDecoder()
+            decoder.keyDecodingStrategy = .convertFromSnakeCase
+            return decoder
+        }()
+    }
+    
+    private var camelCaseJSON: String {
+        """
         { "someProperty": "some property" }
         """
-        
-        let snakeCaseJSON = """
+    }
+    
+    private var snakeCaseJSON: String {
+        """
         { "some_property": "some property" }
         """
-        
+    }
+    
+    private var invalidKeyJSON: String {
+        """
+        { "id": 10 }
+        """
+    }
+    
+    func testSendingAndDecoding() {
         XCTContext.runActivity(named: "With shared configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
                 assert(httpClient.adaptor.calledCount == 0)
                 
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(Request(), decodingCompletion: { result in
+                httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
                     defer { expectation.fulfill() }
                     switch result {
                     case .success(let sample):
@@ -129,7 +168,7 @@ final class HTTPClientTests: XCTestCase {
             XCTContext.runActivity(named: "If non-nil preferredJSONDecoder exists, it will be used.") { _ in
                 let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(snakeCaseJSON.utf8))))
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(RequestUsingPreferredJSONDecoder(), decodingCompletion: { result in
+                httpClient.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
                     defer { expectation.fulfill() }
                     switch result {
                     case .success(let sample):
@@ -150,7 +189,7 @@ final class HTTPClientTests: XCTestCase {
                 httpClient.configuration = customConfiguration
                 
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(Request(), decodingCompletion: { result in
+                httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
                     defer { expectation.fulfill() }
                     switch result {
                     case .success(let sample):
@@ -168,7 +207,7 @@ final class HTTPClientTests: XCTestCase {
                 httpClient.configuration = customConfiguration
                 
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(RequestUsingPreferredJSONDecoder(), decodingCompletion: { result in
+                httpClient.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
                     defer { expectation.fulfill() }
                     switch result {
                     case .success(let sample):
@@ -182,12 +221,9 @@ final class HTTPClientTests: XCTestCase {
         }
         
         XCTContext.runActivity(named: "The decoding failure") { _ in
-            let invalidJSON = """
-            { "id": 10 }
-            """
-            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidJSON.utf8))))
+            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
             let expectation = expectation(description: "HTTP communication success")
-            httpClient.send(Request(), decodingCompletion: { result in
+            httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
                 defer { expectation.fulfill() }
                 switch result {
                 case .success:
@@ -206,7 +242,7 @@ final class HTTPClientTests: XCTestCase {
             assert(httpClient.adaptor.calledCount == 0)
             
             let expectation = expectation(description: "HTTP communication failure")
-            httpClient.send(Request(), decodingCompletion: { result in
+            httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
                 defer { expectation.fulfill() }
                 switch result {
                 case .success:
@@ -218,5 +254,49 @@ final class HTTPClientTests: XCTestCase {
             wait(for: [expectation], timeout: 0.2)
             XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_success() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let sample = try await httpClient.send(SampleDecodingRequest())
+            XCTAssertEqual(sample.someProperty, "some property")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_decodingFailure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let _ = try await httpClient.send(SampleDecodingRequest())
+            XCTFail("The request should fail.")
+        } catch DecodingError.keyNotFound(let codingKey, _) {
+            XCTAssertEqual(codingKey.stringValue, "someProperty")
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    func testSendingAndDecodingAsync_requestFailure() async {
+        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
+        assert(httpClient.adaptor.calledCount == 0)
+        
+        do {
+            let _ = try await httpClient.send(SampleDecodingRequest())
+            XCTFail("The request should fail.")
+        } catch {
+            XCTAssert(error is SampleError)
+        }
+        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
     }
 }

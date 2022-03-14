@@ -39,6 +39,13 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
         adaptor.send(request, receiveOn: queue, completion: completion)
     }
     
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    public func send<Request: APIRequest>(_ request: Request) async throws -> Data? {
+        try await withCheckedThrowingContinuation { continuation in
+            adaptor.send(request, receiveOn: .main, completion: continuation.resume(with:))
+        }
+    }
+    
     /// Send a request and decode the response JSON.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``DecodingRequest`` protocol.
@@ -64,5 +71,12 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
                 finalResult = .failure(error)
             }
         })
+    }
+    
+    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    public func send<Request: DecodingRequest>(_ request: Request) async throws -> Request.Response {
+        try await withCheckedThrowingContinuation { continuation in
+            send(request, decodingCompletion: continuation.resume(with:))
+        }
     }
 }
