@@ -11,6 +11,7 @@ import Foundation
 
 public final class HTTPClientConfiguration {
     
+    /// The shared configuration.
     public static let shared = HTTPClientConfiguration()
     
     /// A default decoder used to decode JSON in the `HTTPClient.send(_:, decodingCompletion:)` method.
@@ -40,6 +41,10 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
         adaptor.send(request, receiveOn: queue, completion: completion)
     }
     
+    /// Send a request and receive the simple response asynchronously.
+    /// - Parameters:
+    ///   - request: An instance of the request type that conforms to the ``APIRequest`` protocol.
+    /// - Returns: The response data.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     public func send<Request: APIRequest>(_ request: Request) async throws -> Data? {
         try await withCheckedThrowingContinuation { continuation in
@@ -74,6 +79,10 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
         })
     }
     
+    /// Send a request asynchronously and decode the response JSON.
+    /// - Parameters:
+    ///   - request: An instance of the request type that conforms to the ``DecodingRequest`` protocol.
+    /// - Returns: The decoded response model from JSON.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     public func send<Request: DecodingRequest>(_ request: Request) async throws -> Request.Response {
         try await withCheckedThrowingContinuation { continuation in
