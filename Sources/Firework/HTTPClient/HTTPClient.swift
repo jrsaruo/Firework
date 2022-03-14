@@ -26,13 +26,14 @@ public final class HTTPClientConfiguration {
 public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     
     public var configuration = HTTPClientConfiguration.shared
-    let adaptor: Adaptor
+    @usableFromInline let adaptor: Adaptor
     
     /// Send a request and receive the simple response.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``APIRequest`` protocol.
     ///   - queue: The queue on which the completion handler is called. The default is `.main`.
     ///   - completion: The handler to be executed once the request has finished.
+    @inlinable
     public func send<Request: APIRequest>(_ request: Request,
                                           receiveOn queue: DispatchQueue = .main,
                                           completion: @escaping (Result<Data?, Adaptor.Failure>) -> Void) {
