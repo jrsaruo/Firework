@@ -44,9 +44,13 @@ public extension HTTPClientAdaptor where Self == AlamofireAdaptor {
 
 // MARK: - AFClient -
 
+/// An HTTP client using Alamofire.
 public typealias AFClient = HTTPClient<AlamofireAdaptor>
 
 extension AFClient {
+    
+    /// Creates an ``AFClient`` instance.
+    /// - Parameter configuration: A configuration used for HTTP communication. The default is `.shared`.
     public init(configuration: HTTPClientConfiguration = .shared) {
         self.init(configuration: configuration, adaptor: .alamofire)
     }
