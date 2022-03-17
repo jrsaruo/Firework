@@ -60,23 +60,12 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
                                                decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
-        adaptor.send(request, receiveOn: queue, completion: { (result: Result<Data, Adaptor.Failure>) in
-            let finalResult: Result<Request.Response, Error>
-            defer { decodingCompletion(finalResult) }
-            
-            switch result {
-            case .success(let data):
-                do {
-                    let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
-                    let decoded = try decoder.decode(Request.Response.self, from: data)
-                    finalResult = .success(decoded)
-                } catch {
-                    finalResult = .failure(error)
-                }
-            case .failure(let error):
-                finalResult = .failure(error)
-            }
-        })
+        adaptor.send(request, receiveOn: queue) { (result: Result<Data, Adaptor.Failure>) in
+            decodingCompletion(Result {
+                let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
+                return try decoder.decode(Request.Response.self, from: result.get())
+            })
+        }
     }
     
     /// Send a request asynchronously and decode the response JSON.
