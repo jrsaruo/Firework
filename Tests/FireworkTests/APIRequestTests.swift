@@ -60,6 +60,23 @@ final class APIRequestTests: XCTestCase {
         XCTAssertNil(urlComponents.queryItems)
     }
     
+    func testPATCHRequestProperties() {
+        struct TestPATCHRequest: PATCHRequest {
+            var endpoint: Endpoint { "https://www.sample.com" }
+            var body: [String: Any] = ["some": "data"]
+        }
+        
+        XCTAssertEqual(TestPATCHRequest.httpMethod, .patch)
+        
+        let request = TestPATCHRequest()
+        XCTAssertNil(request.headers)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        
+        let urlComponents = request.urlComponents
+        XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
+        XCTAssertNil(urlComponents.queryItems)
+    }
+    
     func testDELETERequestProperties() {
         struct TestDELETERequest: DELETERequest {
             var endpoint: Endpoint { "https://www.sample.com" }
