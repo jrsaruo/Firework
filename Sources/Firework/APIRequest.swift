@@ -42,7 +42,7 @@ public protocol Postable {
 public protocol GETRequest: APIRequest {}
 
 public extension GETRequest {
-    static var httpMethod: HTTPMethod { return .get }
+    static var httpMethod: HTTPMethod { .get }
 }
 
 // MARK: - POSTRequest
@@ -50,7 +50,7 @@ public extension GETRequest {
 public protocol POSTRequest: APIRequest, Postable {}
 
 public extension POSTRequest {
-    static var httpMethod: HTTPMethod { return .post }
+    static var httpMethod: HTTPMethod { .post }
 }
 
 // MARK: - PUTRequest
@@ -58,15 +58,23 @@ public extension POSTRequest {
 public protocol PUTRequest: APIRequest, Postable {}
 
 public extension PUTRequest {
-    static var httpMethod: HTTPMethod { return .put }
+    static var httpMethod: HTTPMethod { .put }
 }
 
-// MARK: - PUTRequest
+// MARK: - PATCHRequest
+
+public protocol PATCHRequest: APIRequest, Postable {}
+
+public extension PATCHRequest {
+    static var httpMethod: HTTPMethod { .patch }
+}
+
+// MARK: - DELETERequest
 
 public protocol DELETERequest: APIRequest {}
 
 public extension DELETERequest {
-    static var httpMethod: HTTPMethod { return .delete }
+    static var httpMethod: HTTPMethod { .delete }
 }
 
 // MARK: - DecodingRequest
