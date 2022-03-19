@@ -108,7 +108,7 @@ AFClient().send(request, decodingCompletion: { result in
 To use the `Firework` library in a SwiftPM project, add the following line to the dependencies in your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/jrsaruo/Firework", from "2.0.0"),
+.package(url: "https://github.com/jrsaruo/Firework", from "2.1.0"),
 ```
 
 and add `Firework` as a dependency for your target:
