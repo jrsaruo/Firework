@@ -61,7 +61,15 @@ public extension PUTRequest {
     static var httpMethod: HTTPMethod { .put }
 }
 
-// MARK: - PUTRequest
+// MARK: - PATCHRequest
+
+public protocol PATCHRequest: APIRequest, Postable {}
+
+public extension PATCHRequest {
+    static var httpMethod: HTTPMethod { .patch }
+}
+
+// MARK: - DELETERequest
 
 public protocol DELETERequest: APIRequest {}
 
