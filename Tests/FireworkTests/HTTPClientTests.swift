@@ -86,8 +86,8 @@ final class HTTPClientTests: XCTestCase {
         
         do {
             let data = try await httpClient.send(SampleGETRequest())
-            let unwrapedData = try XCTUnwrap(data)
-            XCTAssertEqual(String(decoding: unwrapedData, as: UTF8.self), "dummy")
+            let unwrappedData = try XCTUnwrap(data)
+            XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
