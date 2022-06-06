@@ -133,21 +133,15 @@ final class HTTPClientTests: XCTestCase {
     }
     
     private var camelCaseJSON: String {
-        """
-        { "someProperty": "some property" }
-        """
+        #"{ "someProperty": "some property" }"#
     }
     
     private var snakeCaseJSON: String {
-        """
-        { "some_property": "some property" }
-        """
+        #"{ "some_property": "some property" }"#
     }
     
     private var invalidKeyJSON: String {
-        """
-        { "id": 10 }
-        """
+        #"{ "id": 10 }"#
     }
     
     func testSendingAndDecoding() {
