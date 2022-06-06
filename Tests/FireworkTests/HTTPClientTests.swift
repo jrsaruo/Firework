@@ -77,8 +77,10 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingGETRequestAsync_success() async {
+    func testSendingGETRequestAsync_success() async throws {
+        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
+            throw XCTSkip("This test can only run on iOS 13.0+, macOS 10.15+, tvOS 13.0+ or watchOS 6.0+")
+        }
         let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
         assert(httpClient.adaptor.calledCount == 0)
         
@@ -92,8 +94,10 @@ final class HTTPClientTests: XCTestCase {
         XCTAssertEqual(httpClient.adaptor.calledCount, 1)
     }
     
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingGETRequestAsync_failure() async {
+    func testSendingGETRequestAsync_failure() async throws {
+        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
+            throw XCTSkip("This test can only run on iOS 13.0+, macOS 10.15+, tvOS 13.0+ or watchOS 6.0+")
+        }
         let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
         assert(httpClient.adaptor.calledCount == 0)
         
@@ -256,8 +260,10 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_success() async {
+    func testSendingAndDecodingAsync_success() async throws {
+        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
+            throw XCTSkip("This test can only run on iOS 13.0+, macOS 10.15+, tvOS 13.0+ or watchOS 6.0+")
+        }
         let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
         assert(httpClient.adaptor.calledCount == 0)
         
@@ -270,8 +276,10 @@ final class HTTPClientTests: XCTestCase {
         XCTAssertEqual(httpClient.adaptor.calledCount, 1)
     }
     
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_decodingFailure() async {
+    func testSendingAndDecodingAsync_decodingFailure() async throws {
+        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
+            throw XCTSkip("This test can only run on iOS 13.0+, macOS 10.15+, tvOS 13.0+ or watchOS 6.0+")
+        }
         let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
         assert(httpClient.adaptor.calledCount == 0)
         
@@ -286,8 +294,10 @@ final class HTTPClientTests: XCTestCase {
         XCTAssertEqual(httpClient.adaptor.calledCount, 1)
     }
     
-    @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_requestFailure() async {
+    func testSendingAndDecodingAsync_requestFailure() async throws {
+        guard #available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *) else {
+            throw XCTSkip("This test can only run on iOS 13.0+, macOS 10.15+, tvOS 13.0+ or watchOS 6.0+")
+        }
         let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
         assert(httpClient.adaptor.calledCount == 0)
         
