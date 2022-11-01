@@ -19,7 +19,7 @@ final class APIRequestTests: XCTestCase {
         
         let request = TestGETRequest()
         XCTAssertNil(request.headers)
-        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -36,7 +36,7 @@ final class APIRequestTests: XCTestCase {
         
         let request = TestPOSTRequest()
         XCTAssertNil(request.headers)
-        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -53,7 +53,7 @@ final class APIRequestTests: XCTestCase {
         
         let request = TestPUTRequest()
         XCTAssertNil(request.headers)
-        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -70,7 +70,7 @@ final class APIRequestTests: XCTestCase {
         
         let request = TestPATCHRequest()
         XCTAssertNil(request.headers)
-        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -86,7 +86,7 @@ final class APIRequestTests: XCTestCase {
         
         let request = TestDELETERequest()
         XCTAssertNil(request.headers)
-        XCTAssertEqual(request.acceptableStatusCodes, 200..<300)
+        XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)

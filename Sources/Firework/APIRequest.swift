@@ -21,7 +21,7 @@ public extension APIRequest {
     
     var headers: HTTPHeaders? { nil }
     var queryItems: [URLQueryItem]? { nil }
-    var acceptableStatusCodes: Range<Int> { 200..<300 }
+    var acceptableStatusCodes: Range<Int> { 200..<400 }
     
     /// URL component to pass to Alamofire.
     var urlComponents: URLComponents {
