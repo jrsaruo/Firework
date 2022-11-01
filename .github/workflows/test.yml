@@ -13,7 +13,7 @@ env:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test_on_macos:
-    runs-on: macos-latest
+    runs-on: macos-12
     
     env:
       CODECOV_PATH: "./coverage.lcov"
