@@ -84,8 +84,8 @@ final class HTTPClientTests: XCTestCase {
         
         do {
             let data = try await httpClient.send(SampleGETRequest())
-            let unwrapedData = try XCTUnwrap(data)
-            XCTAssertEqual(String(decoding: unwrapedData, as: UTF8.self), "dummy")
+            let unwrappedData = try XCTUnwrap(data)
+            XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -129,21 +129,15 @@ final class HTTPClientTests: XCTestCase {
     }
     
     private var camelCaseJSON: String {
-        """
-        { "someProperty": "some property" }
-        """
+        #"{ "someProperty": "some property" }"#
     }
     
     private var snakeCaseJSON: String {
-        """
-        { "some_property": "some property" }
-        """
+        #"{ "some_property": "some property" }"#
     }
     
     private var invalidKeyJSON: String {
-        """
-        { "id": 10 }
-        """
+        #"{ "id": 10 }"#
     }
     
     func testSendingAndDecoding() {
