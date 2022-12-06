@@ -35,6 +35,7 @@ public struct AlamofireAdaptor: HTTPClientAdaptor {
                    encoding: JSONEncoding.default,
                    headers: request.headers)
             .validate(statusCode: request.acceptableStatusCodes)
+            .validate(contentType: request.acceptableContentTypes)
     }
 }
 
