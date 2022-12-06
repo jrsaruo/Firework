@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import Alamofire
 @testable import Firework
 
 final class APIRequestTests: XCTestCase {
@@ -20,6 +21,7 @@ final class APIRequestTests: XCTestCase {
         let request = TestGETRequest()
         XCTAssertNil(request.headers)
         XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
+        XCTAssertEqual(request.acceptableContentTypes, ["*/*"])
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -37,6 +39,7 @@ final class APIRequestTests: XCTestCase {
         let request = TestPOSTRequest()
         XCTAssertNil(request.headers)
         XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
+        XCTAssertEqual(request.acceptableContentTypes, ["*/*"])
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -54,6 +57,7 @@ final class APIRequestTests: XCTestCase {
         let request = TestPUTRequest()
         XCTAssertNil(request.headers)
         XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
+        XCTAssertEqual(request.acceptableContentTypes, ["*/*"])
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -71,6 +75,7 @@ final class APIRequestTests: XCTestCase {
         let request = TestPATCHRequest()
         XCTAssertNil(request.headers)
         XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
+        XCTAssertEqual(request.acceptableContentTypes, ["*/*"])
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
@@ -87,10 +92,22 @@ final class APIRequestTests: XCTestCase {
         let request = TestDELETERequest()
         XCTAssertNil(request.headers)
         XCTAssertEqual(request.acceptableStatusCodes, 200..<400)
+        XCTAssertEqual(request.acceptableContentTypes, ["*/*"])
         
         let urlComponents = request.urlComponents
         XCTAssertEqual(urlComponents.url, URL(string: "https://www.sample.com")!)
         XCTAssertNil(urlComponents.queryItems)
+    }
+    
+    func testDefaultAcceptableContentTypes() {
+        struct TestRequest: GETRequest {
+            var endpoint: Endpoint { "https://www.sample.com" }
+            var headers: HTTPHeaders? {
+                ["Accept": "text/html,application/json"]
+            }
+        }
+        let request = TestRequest()
+        XCTAssertEqual(request.acceptableContentTypes, ["text/html", "application/json"])
     }
     
     func testURLComponentsWithQueries() {

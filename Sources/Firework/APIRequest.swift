@@ -10,11 +10,14 @@ import Foundation
 
 public protocol APIRequest {
     associatedtype StatusCodes: Sequence where StatusCodes.Element == Int
+    associatedtype ContentTypes: Sequence where ContentTypes.Element == String
+    
     static var httpMethod: HTTPMethod { get }
     var endpoint: Endpoint { get }
     var headers: HTTPHeaders? { get }
     var queryItems: [URLQueryItem]? { get }
     var acceptableStatusCodes: StatusCodes { get }
+    var acceptableContentTypes: ContentTypes { get }
 }
 
 public extension APIRequest {
@@ -22,6 +25,10 @@ public extension APIRequest {
     var headers: HTTPHeaders? { nil }
     var queryItems: [URLQueryItem]? { nil }
     var acceptableStatusCodes: Range<Int> { 200..<400 }
+    
+    var acceptableContentTypes: [String] {
+        headers?["Accept"]?.components(separatedBy: ",") ?? ["*/*"]
+    }
     
     /// URL component to pass to Alamofire.
     var urlComponents: URLComponents {
