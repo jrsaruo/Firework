@@ -1,5 +1,5 @@
 //
-//  APIRequestTests.swift
+//  HTTPRequestTests.swift
 //  
 //
 //  Created by Yusaku Nishi on 2021/04/19.
@@ -9,7 +9,7 @@ import XCTest
 import Alamofire
 @testable import Firework
 
-final class APIRequestTests: XCTestCase {
+final class HTTPRequestTests: XCTestCase {
     
     func testGETRequestProperties() {
         struct TestGETRequest: GETRequest {

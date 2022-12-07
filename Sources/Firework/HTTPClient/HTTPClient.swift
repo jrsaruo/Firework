@@ -31,11 +31,11 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     
     /// Send a request and receive the simple response.
     /// - Parameters:
-    ///   - request: An instance of the request type that conforms to the ``APIRequest`` protocol.
+    ///   - request: An instance of the request type that conforms to the ``HTTPRequest`` protocol.
     ///   - queue: The queue on which the completion handler is called. The default is `.main`.
     ///   - completion: The handler to be executed once the request has finished.
     @inlinable
-    public func send<Request: APIRequest>(_ request: Request,
+    public func send<Request: HTTPRequest>(_ request: Request,
                                           receiveOn queue: DispatchQueue = .main,
                                           completion: @escaping (Result<Data?, Adaptor.Failure>) -> Void) {
         adaptor.send(request, receiveOn: queue, completion: completion)
@@ -43,10 +43,10 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     
     /// Send a request and receive the simple response asynchronously.
     /// - Parameters:
-    ///   - request: An instance of the request type that conforms to the ``APIRequest`` protocol.
+    ///   - request: An instance of the request type that conforms to the ``HTTPRequest`` protocol.
     /// - Returns: The response data.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    public func send<Request: APIRequest>(_ request: Request) async throws -> Data? {
+    public func send<Request: HTTPRequest>(_ request: Request) async throws -> Data? {
         try await withCheckedThrowingContinuation { continuation in
             adaptor.send(request, receiveOn: .main, completion: continuation.resume(with:))
         }

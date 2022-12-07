@@ -12,26 +12,26 @@ import Foundation
 
 public struct AlamofireAdaptor: HTTPClientAdaptor {
     
-    public func send<Request: APIRequest>(_ request: Request,
-                                          receiveOn queue: DispatchQueue = .main,
-                                          completion: @escaping (Result<Data?, AFError>) -> Void) {
+    public func send(_ request: some HTTPRequest,
+                     receiveOn queue: DispatchQueue = .main,
+                     completion: @escaping (Result<Data?, AFError>) -> Void) {
         makeDataRequest(from: request).response(queue: queue) { response in
             completion(response.result)
         }
     }
     
-    public func send<Request: APIRequest>(_ request: Request,
-                                          receiveOn queue: DispatchQueue = .main,
-                                          completion: @escaping (Result<Data, AFError>) -> Void) {
+    public func send(_ request: some HTTPRequest,
+                     receiveOn queue: DispatchQueue = .main,
+                     completion: @escaping (Result<Data, AFError>) -> Void) {
         makeDataRequest(from: request).responseData(queue: queue) { response in
             completion(response.result)
         }
     }
     
-    private func makeDataRequest<Request: APIRequest>(from request: Request) -> DataRequest {
+    private func makeDataRequest<Request: HTTPRequest>(from request: Request) -> DataRequest {
         AF.request(request.urlComponents,
                    method: Request.httpMethod,
-                   parameters: (request as? Postable)?.body,
+                   parameters: (request as? HTTPBodySendable)?.body,
                    encoding: JSONEncoding.default,
                    headers: request.headers)
             .validate(statusCode: request.acceptableStatusCodes)

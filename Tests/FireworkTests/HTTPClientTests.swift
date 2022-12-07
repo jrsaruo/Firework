@@ -19,9 +19,9 @@ final class HTTPClientTests: XCTestCase {
             self.result = result
         }
         
-        func send<Request: APIRequest>(_ request: Request,
-                                       receiveOn queue: DispatchQueue = .main,
-                                       completion: @escaping (Result<Data, Error>) -> Void) {
+        func send(_ request: some HTTPRequest,
+                  receiveOn queue: DispatchQueue = .main,
+                  completion: @escaping (Result<Data, Error>) -> Void) {
             calledCount += 1
             queue.async { [unowned self] in
                 completion(result)
