@@ -59,7 +59,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
-                                               decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
+                                               decodingCompletion: @escaping (Result<Request.Response, any Error>) -> Void) {
         adaptor.send(request, receiveOn: queue) { (result: Result<Data, Adaptor.Failure>) in
             decodingCompletion(Result {
                 let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder

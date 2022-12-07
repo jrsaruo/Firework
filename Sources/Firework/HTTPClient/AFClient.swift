@@ -31,7 +31,7 @@ public struct AlamofireAdaptor: HTTPClientAdaptor {
     private func makeDataRequest<Request: HTTPRequest>(from request: Request) -> DataRequest {
         AF.request(request.urlComponents,
                    method: Request.httpMethod,
-                   parameters: (request as? HTTPBodySendable)?.body,
+                   parameters: (request as? any HTTPBodySendable)?.body,
                    encoding: JSONEncoding.default,
                    headers: request.headers)
             .validate(statusCode: request.acceptableStatusCodes)
