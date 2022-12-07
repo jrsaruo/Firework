@@ -14,6 +14,10 @@ public final class HTTPClientConfiguration {
     /// The shared configuration.
     public static let shared = HTTPClientConfiguration()
     
+    /// The configuration used to construct the managed session.
+    /// The default value is `.default`.
+    public lazy var urlSession = URLSessionConfiguration.default
+    
     /// A default decoder used to decode JSON in the `HTTPClient.send(_:, decodingCompletion:)` method.
     ///
     /// You can use this property when you want to use a common decoder in your app.
