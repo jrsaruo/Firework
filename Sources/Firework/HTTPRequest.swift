@@ -43,7 +43,10 @@ public extension HTTPRequest {
     }
 }
 
-public protocol Postable {
+@available(*, unavailable, renamed: "HTTPBodySendable")
+public protocol Postable {}
+
+public protocol HTTPBodySendable {
     var body: [String: Any] { get }
 }
 
@@ -57,7 +60,7 @@ public extension GETRequest {
 
 // MARK: - POSTRequest
 
-public protocol POSTRequest: HTTPRequest, Postable {}
+public protocol POSTRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension POSTRequest {
     static var httpMethod: HTTPMethod { .post }
@@ -65,7 +68,7 @@ public extension POSTRequest {
 
 // MARK: - PUTRequest
 
-public protocol PUTRequest: HTTPRequest, Postable {}
+public protocol PUTRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension PUTRequest {
     static var httpMethod: HTTPMethod { .put }
@@ -73,7 +76,7 @@ public extension PUTRequest {
 
 // MARK: - PATCHRequest
 
-public protocol PATCHRequest: HTTPRequest, Postable {}
+public protocol PATCHRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension PATCHRequest {
     static var httpMethod: HTTPMethod { .patch }
