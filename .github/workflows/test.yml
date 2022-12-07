@@ -1,6 +1,5 @@
 name: Test
 
-# Controls when the action will run. 
 on:
   pull_request:
   
@@ -10,7 +9,6 @@ on:
 env:
   package: Firework
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   test_on_macos:
     runs-on: macos-latest
@@ -38,7 +36,7 @@ jobs:
           > ${{ env.CODECOV_PATH }}
           
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ${{ env.CODECOV_PATH }}
