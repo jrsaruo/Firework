@@ -75,7 +75,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     public func send<Request: DecodingRequest>(_ request: Request) async throws -> Request.Response {
         try await withCheckedThrowingContinuation { continuation in
-            send(request, decodingCompletion: continuation.resume(with:))
+            send(request, receiveOn: .main, decodingCompletion: continuation.resume(with:))
         }
     }
 }
