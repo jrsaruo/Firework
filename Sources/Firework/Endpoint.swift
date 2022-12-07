@@ -6,7 +6,7 @@
 //
 
 /// An API endpoint representation.
-public struct Endpoint: Hashable {
+public struct Endpoint: Hashable, Sendable {
     
     public let urlString: String
     

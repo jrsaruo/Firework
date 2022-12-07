@@ -10,7 +10,7 @@ import Foundation
 
 // MARK: - AlamofireAdaptor -
 
-public struct AlamofireAdaptor: HTTPClientAdaptor {
+public struct AlamofireAdaptor: HTTPClientAdaptor, Sendable {
     
     public func send(_ request: some HTTPRequest,
                      receiveOn queue: DispatchQueue = .main,
