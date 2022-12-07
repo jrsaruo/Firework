@@ -12,16 +12,16 @@ final class HTTPClientTests: XCTestCase {
     
     private final class StubAdaptor: HTTPClientAdaptor {
         
-        let result: Result<Data, Error>
+        let result: Result<Data, any Error>
         private(set) var calledCount = 0
         
-        init(result: Result<Data, Error>) {
+        init(result: Result<Data, any Error>) {
             self.result = result
         }
         
         func send(_ request: some HTTPRequest,
                   receiveOn queue: DispatchQueue = .main,
-                  completion: @escaping (Result<Data, Error>) -> Void) {
+                  completion: @escaping (Result<Data, any Error>) -> Void) {
             calledCount += 1
             queue.async { [unowned self] in
                 completion(result)

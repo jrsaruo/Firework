@@ -59,7 +59,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
-                                               decodingCompletion: @escaping (Result<Request.Response, Error>) -> Void) {
+                                               decodingCompletion: @escaping (Result<Request.Response, any Error>) -> Void) {
         adaptor.send(request, receiveOn: queue) { (result: Result<Data, Adaptor.Failure>) in
             decodingCompletion(Result {
                 let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
@@ -75,7 +75,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     public func send<Request: DecodingRequest>(_ request: Request) async throws -> Request.Response {
         try await withCheckedThrowingContinuation { continuation in
-            send(request, decodingCompletion: continuation.resume(with:))
+            send(request, receiveOn: .main, decodingCompletion: continuation.resume(with:))
         }
     }
 }
