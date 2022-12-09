@@ -50,6 +50,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     ///   - request: An instance of the request type that conforms to the ``HTTPRequest`` protocol.
     /// - Returns: The response data.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
+    @discardableResult
     public func send<Request: HTTPRequest>(_ request: Request) async throws -> Data? {
         try await withCheckedThrowingContinuation { continuation in
             adaptor.send(request, receiveOn: .main, completion: continuation.resume(with:))
