@@ -98,7 +98,7 @@ final class HTTPClientTests: XCTestCase {
         assert(httpClient.adaptor.calledCount == 0)
         
         do {
-            let _ = try await httpClient.send(SampleGETRequest())
+            try await httpClient.send(SampleGETRequest())
             XCTFail("The request should fail.")
         } catch {
             XCTAssert(error is SampleError)
