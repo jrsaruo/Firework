@@ -111,22 +111,18 @@ final class HTTPClientTests: XCTestCase {
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingGETRequestAsync_success() async {
+    func testSendingGETRequestAsync_success() async throws {
         // Arrange
         MockURLProtocol.requestHandler = { _ in
             (HTTPURLResponse(), Data("dummy".utf8))
         }
         
-        do {
-            // Act
-            let data = try await client.send(SampleGETRequest())
-            
-            // Assert
-            let unwrappedData = try XCTUnwrap(data)
-            XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        // Act
+        let data = try await client.send(SampleGETRequest())
+        
+        // Assert
+        let unwrappedData = try XCTUnwrap(data)
+        XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -324,25 +320,21 @@ final class HTTPClientTests: XCTestCase {
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_success() async {
+    func testSendingAndDecodingAsync_success() async throws {
         // Arrange
         MockURLProtocol.requestHandler = { [unowned self] _ in
             (HTTPURLResponse(), Data(camelCaseJSON.utf8))
         }
         
-        do {
-            // Act
-            let sample = try await client.send(SampleDecodingRequest())
-            
-            // Assert
-            XCTAssertEqual(sample.someProperty, "some property")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
-        }
+        // Act
+        let sample = try await client.send(SampleDecodingRequest())
+        
+        // Assert
+        XCTAssertEqual(sample.someProperty, "some property")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_decodingFailure() async {
+    func testSendingAndDecodingAsync_decodingFailure() async throws {
         // Arrange
         MockURLProtocol.requestHandler = { [unowned self] _ in
             (HTTPURLResponse(), Data(invalidKeyJSON.utf8))
@@ -355,8 +347,6 @@ final class HTTPClientTests: XCTestCase {
         } catch DecodingError.keyNotFound(let codingKey, _) {
             // Assert
             XCTAssertEqual(codingKey.stringValue, "someProperty")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
         }
     }
     
@@ -375,9 +365,8 @@ final class HTTPClientTests: XCTestCase {
             // Act
             let _ = try await client.send(SampleDecodingRequest())
             XCTFail("The request should fail.")
-        } catch {
+        } catch let error as AFError {
             // Assert
-            let error = try XCTUnwrap(error as? AFError)
             XCTAssertEqual(error.responseCode, 404)
         }
     }
