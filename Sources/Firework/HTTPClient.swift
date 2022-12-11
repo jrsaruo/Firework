@@ -45,7 +45,7 @@ public struct HTTPClient {
     
     // MARK: - Initializers
     
-    public init(configuration: HTTPClientConfiguration) {
+    public init(configuration: HTTPClientConfiguration = .init()) {
         self.configuration = configuration
         self.session = Session(configuration: configuration.urlSession)
     }
