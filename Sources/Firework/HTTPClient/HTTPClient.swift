@@ -30,8 +30,17 @@ public final class HTTPClientConfiguration {
 
 public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     
-    public var configuration = HTTPClientConfiguration.shared
-    @usableFromInline let adaptor: Adaptor
+    /*
+     * NOTE:
+     * This is not `public var` property
+     * because changes to the `configuration.urlSession` are not reflected
+     * in the `Alamofire.Session.sessionConfiguration`.
+     * Its customization is limited to only when initializing `HTTPClient`.
+     */
+    let configuration: HTTPClientConfiguration
+    
+    @usableFromInline
+    var adaptor: Adaptor
     
     /// Send a request and receive the simple response.
     /// - Parameters:
