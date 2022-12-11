@@ -182,7 +182,7 @@ final class HTTPClientTests: XCTestCase {
     }
     
     func testSendingAndDecoding() {
-        XCTContext.runActivity(named: "With shared configuration") { _ in
+        XCTContext.runActivity(named: "With default configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 // Arrange
                 MockURLProtocol.requestHandler = { [unowned self] _ in

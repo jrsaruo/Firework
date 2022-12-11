@@ -11,9 +11,6 @@ import Foundation
 
 public final class HTTPClientConfiguration {
     
-    /// The shared configuration.
-    public static let shared = HTTPClientConfiguration()
-    
     /// The configuration used to construct the managed session.
     /// The default value is `.default`.
     public lazy var urlSession = URLSessionConfiguration.default
@@ -24,6 +21,8 @@ public final class HTTPClientConfiguration {
     /// If you want to use a different decoder for each request,
     /// implement the `preferredJSONDecoder` property in the request type that conforms to the ``DecodingRequest`` protocol.
     public lazy var defaultJSONDecoder = JSONDecoder()
+    
+    public init() {}
 }
 
 // MARK: - HTTPClient -

@@ -61,8 +61,8 @@ public typealias AFClient = HTTPClient<AlamofireAdaptor>
 extension AFClient {
     
     /// Creates an ``AFClient`` instance.
-    /// - Parameter configuration: A configuration used for HTTP communication. The default is `.shared`.
-    public init(configuration: HTTPClientConfiguration = .shared) {
+    /// - Parameter configuration: A configuration used for HTTP communication.
+    public init(configuration: HTTPClientConfiguration = .init()) {
         self.init(configuration: configuration,
                   adaptor: .alamofire(configuration: configuration))
     }
