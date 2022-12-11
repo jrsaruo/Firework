@@ -39,7 +39,7 @@ final class HTTPClientTests: XCTestCase {
         }
     }
     
-    private var client: AFClient!
+    private var client: HTTPClient!
     
     override func setUp() {
         super.setUp()
@@ -51,7 +51,7 @@ final class HTTPClientTests: XCTestCase {
         let configuration = HTTPClientConfiguration()
         configuration.urlSession = .ephemeral
         configuration.urlSession.protocolClasses = [MockURLProtocol.self]
-        client = AFClient(configuration: configuration)
+        client = HTTPClient(configuration: configuration)
     }
     
     // MARK: - Sending request tests
@@ -228,7 +228,7 @@ final class HTTPClientTests: XCTestCase {
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 // Arrange
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .convertFromSnakeCase
-                let client = AFClient(configuration: customConfiguration)
+                let client = HTTPClient(configuration: customConfiguration)
                 
                 MockURLProtocol.requestHandler = { [unowned self] _ in
                     (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
@@ -250,7 +250,7 @@ final class HTTPClientTests: XCTestCase {
             XCTContext.runActivity(named: "If non-nil preferredJSONDecoder exists, it will be used.") { _ in
                 // Arrange
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .useDefaultKeys
-                let client = AFClient(configuration: customConfiguration)
+                let client = HTTPClient(configuration: customConfiguration)
                 
                 MockURLProtocol.requestHandler = { [unowned self] _ in
                     (HTTPURLResponse(), Data(snakeCaseJSON.utf8))

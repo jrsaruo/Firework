@@ -112,5 +112,5 @@ public struct HTTPClient {
     }
 }
 
-/// An alias for compatibility.
-public typealias AFClient = HTTPClient
+@available(*, unavailable, renamed: "HTTPClient")
+public struct AFClient {}
