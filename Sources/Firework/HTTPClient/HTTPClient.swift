@@ -13,6 +13,8 @@ public final class HTTPClientConfiguration {
     
     /// The configuration used to construct the managed session.
     /// The default value is `.default`.
+    ///
+    /// - Note: Changes to this value after being passed to an initializer of ``HTTPClient`` will have no effect.
     public lazy var urlSession = URLSessionConfiguration.default
     
     /// A default decoder used to decode JSON in the `HTTPClient.send(_:, decodingCompletion:)` method.
