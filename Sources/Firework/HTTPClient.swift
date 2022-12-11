@@ -25,6 +25,7 @@ public final class HTTPClientConfiguration {
     /// implement the `preferredJSONDecoder` property in the request type that conforms to the ``DecodingRequest`` protocol.
     public lazy var defaultJSONDecoder = JSONDecoder()
     
+    /// Creates an ``HTTPClientConfiguration`` instance.
     public init() {}
 }
 
@@ -45,7 +46,9 @@ public struct HTTPClient {
     
     // MARK: - Initializers
     
-    public init(configuration: HTTPClientConfiguration) {
+    /// Creates an ``HTTPClient`` instance.
+    /// - Parameter configuration: A configuration used for HTTP communication.
+    public init(configuration: HTTPClientConfiguration = .init()) {
         self.configuration = configuration
         self.session = Session(configuration: configuration.urlSession)
     }
