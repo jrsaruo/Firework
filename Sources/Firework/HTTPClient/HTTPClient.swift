@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Alamofire
 
 // MARK: - HTTPClientConfiguration -
 
@@ -29,7 +30,7 @@ public final class HTTPClientConfiguration {
 
 // MARK: - HTTPClient -
 
-public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
+public struct HTTPClient {
     
     /*
      * NOTE:
@@ -40,19 +41,28 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
      */
     let configuration: HTTPClientConfiguration
     
-    @usableFromInline
-    var adaptor: Adaptor
+    private let session: Session
+    
+    // MARK: - Initializers
+    
+    public init(configuration: HTTPClientConfiguration) {
+        self.configuration = configuration
+        self.session = Session(configuration: configuration.urlSession)
+    }
+    
+    // MARK: - Methods
     
     /// Send a request and receive the simple response.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``HTTPRequest`` protocol.
     ///   - queue: The queue on which the completion handler is called. The default is `.main`.
     ///   - completion: The handler to be executed once the request has finished.
-    @inlinable
     public func send(_ request: some HTTPRequest,
                      receiveOn queue: DispatchQueue = .main,
-                     completion: @escaping (Result<Data?, Adaptor.Failure>) -> Void) {
-        adaptor.send(request, receiveOn: queue, completion: completion)
+                     completion: @escaping (Result<Data?, AFError>) -> Void) {
+        makeDataRequest(from: request).response(queue: queue) { response in
+            completion(response.result)
+        }
     }
     
     /// Send a request and receive the simple response asynchronously.
@@ -63,7 +73,7 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     @discardableResult
     public func send(_ request: some HTTPRequest) async throws -> Data? {
         try await withCheckedThrowingContinuation { continuation in
-            adaptor.send(request, receiveOn: .main, completion: continuation.resume(with:))
+            send(request, receiveOn: .main, completion: continuation.resume(with:))
         }
     }
     
@@ -75,10 +85,10 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
                                                decodingCompletion: @escaping (Result<Request.Response, any Error>) -> Void) {
-        adaptor.send(request, receiveOn: queue) { (result: Result<Data, Adaptor.Failure>) in
+        makeDataRequest(from: request).responseData(queue: queue) { response in
             decodingCompletion(Result {
                 let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
-                return try decoder.decode(Request.Response.self, from: result.get())
+                return try decoder.decode(Request.Response.self, from: response.result.get())
             })
         }
     }
@@ -93,4 +103,18 @@ public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
             send(request, receiveOn: .main, decodingCompletion: continuation.resume(with:))
         }
     }
+    
+    private func makeDataRequest<Request: HTTPRequest>(from request: Request) -> DataRequest {
+        session
+            .request(request.urlComponents,
+                     method: Request.httpMethod,
+                     parameters: (request as? any HTTPBodySendable)?.body,
+                     encoding: JSONEncoding.default,
+                     headers: request.headers)
+            .validate(statusCode: request.acceptableStatusCodes)
+            .validate(contentType: request.acceptableContentTypes)
+    }
 }
+
+/// An alias for compatibility.
+public typealias AFClient = HTTPClient
