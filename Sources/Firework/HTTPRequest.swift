@@ -1,27 +1,37 @@
 //
-//  APIRequest.swift
+//  HTTPRequest.swift
 //  
 //
 //  Created by Yusaku Nishi on 2020/10/23.
 //
 
-import Alamofire
 import Foundation
+import Alamofire
 
-public protocol APIRequest {
+@available(*, unavailable, renamed: "HTTPRequest")
+public protocol APIRequest {}
+
+public protocol HTTPRequest {
     associatedtype StatusCodes: Sequence where StatusCodes.Element == Int
+    associatedtype ContentTypes: Sequence where ContentTypes.Element == String
+    
     static var httpMethod: HTTPMethod { get }
     var endpoint: Endpoint { get }
     var headers: HTTPHeaders? { get }
     var queryItems: [URLQueryItem]? { get }
     var acceptableStatusCodes: StatusCodes { get }
+    var acceptableContentTypes: ContentTypes { get }
 }
 
-public extension APIRequest {
+public extension HTTPRequest {
     
     var headers: HTTPHeaders? { nil }
     var queryItems: [URLQueryItem]? { nil }
     var acceptableStatusCodes: Range<Int> { 200..<400 }
+    
+    var acceptableContentTypes: [String] {
+        headers?["Accept"]?.components(separatedBy: ",") ?? ["*/*"]
+    }
     
     /// URL component to pass to Alamofire.
     var urlComponents: URLComponents {
@@ -33,13 +43,16 @@ public extension APIRequest {
     }
 }
 
-public protocol Postable {
+@available(*, unavailable, renamed: "HTTPBodySendable")
+public protocol Postable {}
+
+public protocol HTTPBodySendable {
     var body: [String: Any] { get }
 }
 
 // MARK: - GETRequest
 
-public protocol GETRequest: APIRequest {}
+public protocol GETRequest: HTTPRequest {}
 
 public extension GETRequest {
     static var httpMethod: HTTPMethod { .get }
@@ -47,7 +60,7 @@ public extension GETRequest {
 
 // MARK: - POSTRequest
 
-public protocol POSTRequest: APIRequest, Postable {}
+public protocol POSTRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension POSTRequest {
     static var httpMethod: HTTPMethod { .post }
@@ -55,7 +68,7 @@ public extension POSTRequest {
 
 // MARK: - PUTRequest
 
-public protocol PUTRequest: APIRequest, Postable {}
+public protocol PUTRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension PUTRequest {
     static var httpMethod: HTTPMethod { .put }
@@ -63,7 +76,7 @@ public extension PUTRequest {
 
 // MARK: - PATCHRequest
 
-public protocol PATCHRequest: APIRequest, Postable {}
+public protocol PATCHRequest: HTTPRequest, HTTPBodySendable {}
 
 public extension PATCHRequest {
     static var httpMethod: HTTPMethod { .patch }
@@ -71,7 +84,7 @@ public extension PATCHRequest {
 
 // MARK: - DELETERequest
 
-public protocol DELETERequest: APIRequest {}
+public protocol DELETERequest: HTTPRequest {}
 
 public extension DELETERequest {
     static var httpMethod: HTTPMethod { .delete }
@@ -79,7 +92,7 @@ public extension DELETERequest {
 
 // MARK: - DecodingRequest
 
-public protocol DecodingRequest: APIRequest {
+public protocol DecodingRequest: HTTPRequest {
     associatedtype Response: Decodable
     
     /// A decoder to be used when decoding to `Response`.

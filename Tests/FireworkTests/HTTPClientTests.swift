@@ -6,30 +6,53 @@
 //
 
 import XCTest
+import Alamofire
 @testable import Firework
 
 final class HTTPClientTests: XCTestCase {
     
-    private final class StubAdaptor: HTTPClientAdaptor {
+    final class MockURLProtocol: URLProtocol {
         
-        let result: Result<Data, Error>
-        private(set) var calledCount = 0
+        static var requestHandler: ((URLRequest) throws -> (HTTPURLResponse, Data))!
         
-        init(result: Result<Data, Error>) {
-            self.result = result
+        override static func canInit(with task: URLSessionTask) -> Bool {
+            true
         }
         
-        func send<Request: APIRequest>(_ request: Request,
-                                       receiveOn queue: DispatchQueue = .main,
-                                       completion: @escaping (Result<Data, Error>) -> Void) {
-            calledCount += 1
-            queue.async { [unowned self] in
-                completion(result)
+        override static func canonicalRequest(for request: URLRequest) -> URLRequest {
+            request
+        }
+        
+        override func startLoading() {
+            do {
+                let (response, data) = try Self.requestHandler(request)
+                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: data)
+                client?.urlProtocolDidFinishLoading(self)
+            } catch {
+                client?.urlProtocol(self, didFailWithError: error)
             }
+        }
+        
+        override func stopLoading() {
+            // NOP
         }
     }
     
-    private struct SampleError: Error {}
+    private var client: HTTPClient!
+    
+    override func setUp() {
+        super.setUp()
+        
+        MockURLProtocol.requestHandler = { _ in
+            fatalError("`MockURLProtocol.requestHandler` must be initialized before tests.")
+        }
+        
+        let configuration = HTTPClientConfiguration()
+        configuration.urlSession = .ephemeral
+        configuration.urlSession.protocolClasses = [MockURLProtocol.self]
+        client = HTTPClient(configuration: configuration)
+    }
     
     // MARK: - Sending request tests
     
@@ -39,13 +62,18 @@ final class HTTPClientTests: XCTestCase {
     
     func testSendingGETRequest() {
         XCTContext.runActivity(named: "Success") { _ in
-            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
-            assert(httpClient.adaptor.calledCount == 0)
+            // Arrange
+            MockURLProtocol.requestHandler = { request in
+                XCTAssertEqual(request.url, URL(string: "https://dummy.api/sample")!)
+                XCTAssertEqual(request.httpMethod, "GET")
+                return (HTTPURLResponse(), Data("dummy".utf8))
+            }
             
+            // Act
             let expectation = expectation(description: "HTTP communication success")
-            httpClient.send(SampleGETRequest()) { result in
+            client.send(SampleGETRequest()) { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success(let data?):
                     XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
                 case .success(nil):
@@ -55,55 +83,66 @@ final class HTTPClientTests: XCTestCase {
                 }
             }
             wait(for: [expectation], timeout: 0.2)
-            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
         
         XCTContext.runActivity(named: "Failure") { _ in
-            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
-            assert(httpClient.adaptor.calledCount == 0)
+            // Arrange
+            MockURLProtocol.requestHandler = { request in
+                (HTTPURLResponse(url: try XCTUnwrap(request.url),
+                                 statusCode: 404,
+                                 httpVersion: nil,
+                                 headerFields: nil)!,
+                 Data())
+            }
             
+            // Act
             let expectation = expectation(description: "HTTP communication failure")
-            httpClient.send(SampleGETRequest()) { result in
+            client.send(SampleGETRequest()) { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The request should fail.")
                 case .failure(let error):
-                    XCTAssert(error is SampleError)
+                    XCTAssertEqual(error.responseCode, 404)
                 }
             }
             wait(for: [expectation], timeout: 0.2)
-            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingGETRequestAsync_success() async {
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data("dummy".utf8))))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        do {
-            let data = try await httpClient.send(SampleGETRequest())
-            let unwrappedData = try XCTUnwrap(data)
-            XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+    func testSendingGETRequestAsync_success() async throws {
+        // Arrange
+        MockURLProtocol.requestHandler = { _ in
+            (HTTPURLResponse(), Data("dummy".utf8))
         }
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        // Act
+        let response = await client.send(SampleGETRequest())
+        
+        // Assert
+        let data = try XCTUnwrap(response.result.get())
+        XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingGETRequestAsync_failure() async {
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        do {
-            let _ = try await httpClient.send(SampleGETRequest())
-            XCTFail("The request should fail.")
-        } catch {
-            XCTAssert(error is SampleError)
+    func testSendingGETRequestAsync_failure() async throws {
+        // Arrange
+        MockURLProtocol.requestHandler = { request in
+            (HTTPURLResponse(url: try XCTUnwrap(request.url),
+                             statusCode: 404,
+                             httpVersion: nil,
+                             headerFields: nil)!,
+             Data())
         }
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        // Act
+        let response = await client.send(SampleGETRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        XCTAssertEqual(error.responseCode, 404)
     }
     
     // MARK: - Decoding tests
@@ -141,15 +180,18 @@ final class HTTPClientTests: XCTestCase {
     }
     
     func testSendingAndDecoding() {
-        XCTContext.runActivity(named: "With shared configuration") { _ in
+        XCTContext.runActivity(named: "With default configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
-                let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
-                assert(httpClient.adaptor.calledCount == 0)
+                // Arrange
+                MockURLProtocol.requestHandler = { [unowned self] _ in
+                    (HTTPURLResponse(), Data(camelCaseJSON.utf8))
+                }
                 
+                // Act
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
+                client.send(SampleDecodingRequest(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -157,14 +199,18 @@ final class HTTPClientTests: XCTestCase {
                     }
                 })
                 wait(for: [expectation], timeout: 0.2)
-                XCTAssertEqual(httpClient.adaptor.calledCount, 1)
             }
             XCTContext.runActivity(named: "If non-nil preferredJSONDecoder exists, it will be used.") { _ in
-                let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(snakeCaseJSON.utf8))))
+                // Arrange
+                MockURLProtocol.requestHandler = { [unowned self] _ in
+                    (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
+                }
+                
+                // Act
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
+                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -176,16 +222,23 @@ final class HTTPClientTests: XCTestCase {
         }
         
         XCTContext.runActivity(named: "With custom configuration") { _ in
+            let customConfiguration = HTTPClientConfiguration()
+            customConfiguration.urlSession = .ephemeral
+            customConfiguration.urlSession.protocolClasses = [MockURLProtocol.self]
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
-                let customConfiguration = HTTPClientConfiguration()
+                // Arrange
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .convertFromSnakeCase
-                var httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(snakeCaseJSON.utf8))))
-                httpClient.configuration = customConfiguration
+                let client = HTTPClient(configuration: customConfiguration)
                 
+                MockURLProtocol.requestHandler = { [unowned self] _ in
+                    (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
+                }
+                
+                // Act
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
+                client.send(SampleDecodingRequest(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -195,15 +248,19 @@ final class HTTPClientTests: XCTestCase {
                 wait(for: [expectation], timeout: 0.2)
             }
             XCTContext.runActivity(named: "If non-nil preferredJSONDecoder exists, it will be used.") { _ in
-                let customConfiguration = HTTPClientConfiguration()
+                // Arrange
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .useDefaultKeys
-                var httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(snakeCaseJSON.utf8))))
-                httpClient.configuration = customConfiguration
+                let client = HTTPClient(configuration: customConfiguration)
                 
+                MockURLProtocol.requestHandler = { [unowned self] _ in
+                    (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
+                }
+                
+                // Act
                 let expectation = expectation(description: "HTTP communication success")
-                httpClient.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
+                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -215,14 +272,21 @@ final class HTTPClientTests: XCTestCase {
         }
         
         XCTContext.runActivity(named: "The decoding failure") { _ in
-            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
+            // Arrange
+            MockURLProtocol.requestHandler = { [unowned self] _ in
+                (HTTPURLResponse(), Data(invalidKeyJSON.utf8))
+            }
+            
+            // Act
             let expectation = expectation(description: "HTTP communication success")
-            httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
+            client.send(SampleDecodingRequest(), decodingCompletion: { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The decoding should fail.")
-                case .failure(DecodingError.keyNotFound(let codingKey, _)):
+                case .failure(.responseSerializationFailed(
+                    reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))
+                )):
                     XCTAssertEqual(codingKey.stringValue, "someProperty")
                 case .failure(let error):
                     XCTFail("Unexpected error: \(error)")
@@ -232,65 +296,81 @@ final class HTTPClientTests: XCTestCase {
         }
         
         XCTContext.runActivity(named: "The request failure") { _ in
-            let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
-            assert(httpClient.adaptor.calledCount == 0)
+            // Arrange
+            MockURLProtocol.requestHandler = { request in
+                (HTTPURLResponse(url: try XCTUnwrap(request.url),
+                                 statusCode: 404,
+                                 httpVersion: nil,
+                                 headerFields: nil)!,
+                 Data())
+            }
             
+            // Act
             let expectation = expectation(description: "HTTP communication failure")
-            httpClient.send(SampleDecodingRequest(), decodingCompletion: { result in
+            client.send(SampleDecodingRequest(), decodingCompletion: { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The request should fail.")
                 case .failure(let error):
-                    XCTAssert(error is SampleError)
+                    XCTAssertEqual(error.responseCode, 404)
                 }
             })
             wait(for: [expectation], timeout: 0.2)
-            XCTAssertEqual(httpClient.adaptor.calledCount, 1)
         }
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_success() async {
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(camelCaseJSON.utf8))))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        do {
-            let sample = try await httpClient.send(SampleDecodingRequest())
-            XCTAssertEqual(sample.someProperty, "some property")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+    func testSendingAndDecodingAsync_success() async throws {
+        // Arrange
+        MockURLProtocol.requestHandler = { [unowned self] _ in
+            (HTTPURLResponse(), Data(camelCaseJSON.utf8))
         }
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        // Act
+        let response = await client.send(SampleDecodingRequest())
+        
+        // Assert
+        let sample = try response.result.get()
+        XCTAssertEqual(sample.someProperty, "some property")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_decodingFailure() async {
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .success(Data(invalidKeyJSON.utf8))))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        do {
-            let _ = try await httpClient.send(SampleDecodingRequest())
-            XCTFail("The request should fail.")
-        } catch DecodingError.keyNotFound(let codingKey, _) {
-            XCTAssertEqual(codingKey.stringValue, "someProperty")
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+    func testSendingAndDecodingAsync_decodingFailure() async throws {
+        // Arrange
+        MockURLProtocol.requestHandler = { [unowned self] _ in
+            (HTTPURLResponse(), Data(invalidKeyJSON.utf8))
         }
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        // Act
+        let response = await client.send(SampleDecodingRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        guard case .responseSerializationFailed(reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))) = error else {
+            throw error
+        }
+        XCTAssertEqual(codingKey.stringValue, "someProperty")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    func testSendingAndDecodingAsync_requestFailure() async {
-        let httpClient = HTTPClient(adaptor: StubAdaptor(result: .failure(SampleError())))
-        assert(httpClient.adaptor.calledCount == 0)
-        
-        do {
-            let _ = try await httpClient.send(SampleDecodingRequest())
-            XCTFail("The request should fail.")
-        } catch {
-            XCTAssert(error is SampleError)
+    func testSendingAndDecodingAsync_requestFailure() async throws {
+        // Arrange
+        MockURLProtocol.requestHandler = { request in
+            (HTTPURLResponse(url: try XCTUnwrap(request.url),
+                             statusCode: 404,
+                             httpVersion: nil,
+                             headerFields: nil)!,
+             Data())
         }
-        XCTAssertEqual(httpClient.adaptor.calledCount, 1)
+        
+        // Act
+        let response = await client.send(SampleDecodingRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        XCTAssertEqual(error.responseCode, 404)
     }
 }

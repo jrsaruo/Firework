@@ -42,7 +42,7 @@ struct HealthCheckRequest: GETRequest {
 // Send a request [async version]
 do {
     let request = HealthCheckRequest()
-    try await AFClient().send(request)
+    let _ = try await HTTPClient().send(request).result.get()
     print("Healthy!")
 } catch {
     print(error)
@@ -50,8 +50,8 @@ do {
 
 // Send a request [callback version]
 let request = HealthCheckRequest()
-AFClient().send(request) { result in
-    switch result {
+HTTPClient().send(request) { response in
+    switch response.result {
     case .success:
         print("Healthy!")
     case .failure(let error):
@@ -83,7 +83,7 @@ struct ProfileRequest: POSTRequest, DecodingRequest {
 // Send a request [async version]
 do {
     let request = ProfileRequest(userID: 100)
-    let profile = try await AFClient().send(request)
+    let profile = try await HTTPClient().send(request).result.get()
     // The type of `profile` is `Profile`
     print("User name:", profile.name)
 } catch {
@@ -92,8 +92,8 @@ do {
 
 // Send a request [callback version]
 let request = ProfileRequest(userID: 100)
-AFClient().send(request, decodingCompletion: { result in
-    switch result {
+HTTPClient().send(request, decodingCompletion: { response in
+    switch response.result {
     case .success(let profile):
         // The type of `profile` is `Profile`
         print("User name:", profile.name)
@@ -108,7 +108,7 @@ AFClient().send(request, decodingCompletion: { result in
 To use the `Firework` library in a SwiftPM project, add the following line to the dependencies in your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/jrsaruo/Firework", from: "2.1.1"),
+.package(url: "https://github.com/jrsaruo/Firework", from: "3.0.0"),
 ```
 
 and add `Firework` as a dependency for your target:
