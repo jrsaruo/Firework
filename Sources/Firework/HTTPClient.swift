@@ -59,21 +59,20 @@ public struct HTTPClient {
     ///   - completion: The handler to be executed once the request has finished.
     public func send(_ request: some HTTPRequest,
                      receiveOn queue: DispatchQueue = .main,
-                     completion: @escaping (Result<Data?, AFError>) -> Void) {
-        makeDataRequest(from: request).response(queue: queue) { response in
-            completion(response.result)
-        }
+                     completion: @escaping (AFDataResponse<Data?>) -> Void) {
+        makeDataRequest(from: request)
+            .response(queue: queue, completionHandler: completion)
     }
     
     /// Send a request and receive the simple response asynchronously.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``HTTPRequest`` protocol.
-    /// - Returns: The response data.
+    /// - Returns: The response.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
     @discardableResult
-    public func send(_ request: some HTTPRequest) async throws -> Data? {
-        try await withCheckedThrowingContinuation { continuation in
-            send(request, receiveOn: .main, completion: continuation.resume(with:))
+    public func send(_ request: some HTTPRequest) async -> AFDataResponse<Data?> {
+        await withCheckedContinuation { continuation in
+            send(request, receiveOn: .main, completion: continuation.resume(returning:))
         }
     }
     
@@ -84,22 +83,20 @@ public struct HTTPClient {
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
-                                               decodingCompletion: @escaping (Result<Request.Response, AFError>) -> Void) {
+                                               decodingCompletion: @escaping (AFDataResponse<Request.Response>) -> Void) {
         let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
         makeDataRequest(from: request)
-            .responseDecodable(queue: queue, decoder: decoder) { response in
-                decodingCompletion(response.result)
-            }
+            .responseDecodable(queue: queue, decoder: decoder, completionHandler: decodingCompletion)
     }
     
     /// Send a request asynchronously and decode the response JSON.
     /// - Parameters:
     ///   - request: An instance of the request type that conforms to the ``DecodingRequest`` protocol.
-    /// - Returns: The decoded response model from JSON.
+    /// - Returns: The response that contains decoded model from JSON.
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
-    public func send<Request: DecodingRequest>(_ request: Request) async throws -> Request.Response {
-        try await withCheckedThrowingContinuation { continuation in
-            send(request, receiveOn: .main, decodingCompletion: continuation.resume(with:))
+    public func send<Request: DecodingRequest>(_ request: Request) async -> AFDataResponse<Request.Response> {
+        await withCheckedContinuation { continuation in
+            send(request, receiveOn: .main, decodingCompletion: continuation.resume(returning:))
         }
     }
     

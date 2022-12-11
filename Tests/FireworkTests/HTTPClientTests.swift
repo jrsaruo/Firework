@@ -71,9 +71,9 @@ final class HTTPClientTests: XCTestCase {
             
             // Act
             let expectation = expectation(description: "HTTP communication success")
-            client.send(SampleGETRequest()) { result in
+            client.send(SampleGETRequest()) { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success(let data?):
                     XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
                 case .success(nil):
@@ -97,9 +97,9 @@ final class HTTPClientTests: XCTestCase {
             
             // Act
             let expectation = expectation(description: "HTTP communication failure")
-            client.send(SampleGETRequest()) { result in
+            client.send(SampleGETRequest()) { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The request should fail.")
                 case .failure(let error):
@@ -118,11 +118,11 @@ final class HTTPClientTests: XCTestCase {
         }
         
         // Act
-        let data = try await client.send(SampleGETRequest())
+        let response = await client.send(SampleGETRequest())
         
         // Assert
-        let unwrappedData = try XCTUnwrap(data)
-        XCTAssertEqual(String(decoding: unwrappedData, as: UTF8.self), "dummy")
+        let data = try XCTUnwrap(response.result.get())
+        XCTAssertEqual(String(decoding: data, as: UTF8.self), "dummy")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -136,15 +136,13 @@ final class HTTPClientTests: XCTestCase {
              Data())
         }
         
-        do {
-            // Act
-            try await client.send(SampleGETRequest())
-            XCTFail("The request should fail.")
-        } catch {
-            // Assert
-            let error = try XCTUnwrap(error as? AFError)
-            XCTAssertEqual(error.responseCode, 404)
-        }
+        // Act
+        let response = await client.send(SampleGETRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        XCTAssertEqual(error.responseCode, 404)
     }
     
     // MARK: - Decoding tests
@@ -191,9 +189,9 @@ final class HTTPClientTests: XCTestCase {
                 
                 // Act
                 let expectation = expectation(description: "HTTP communication success")
-                client.send(SampleDecodingRequest(), decodingCompletion: { result in
+                client.send(SampleDecodingRequest(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -210,9 +208,9 @@ final class HTTPClientTests: XCTestCase {
                 
                 // Act
                 let expectation = expectation(description: "HTTP communication success")
-                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
+                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -238,9 +236,9 @@ final class HTTPClientTests: XCTestCase {
                 
                 // Act
                 let expectation = expectation(description: "HTTP communication success")
-                client.send(SampleDecodingRequest(), decodingCompletion: { result in
+                client.send(SampleDecodingRequest(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -260,9 +258,9 @@ final class HTTPClientTests: XCTestCase {
                 
                 // Act
                 let expectation = expectation(description: "HTTP communication success")
-                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { result in
+                client.send(SampleDecodingRequestPreferringSnakeCase(), decodingCompletion: { response in
                     defer { expectation.fulfill() }
-                    switch result {
+                    switch response.result {
                     case .success(let sample):
                         XCTAssertEqual(sample.someProperty, "some property")
                     case .failure(let error):
@@ -281,9 +279,9 @@ final class HTTPClientTests: XCTestCase {
             
             // Act
             let expectation = expectation(description: "HTTP communication success")
-            client.send(SampleDecodingRequest(), decodingCompletion: { result in
+            client.send(SampleDecodingRequest(), decodingCompletion: { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The decoding should fail.")
                 case .failure(.responseSerializationFailed(
@@ -309,9 +307,9 @@ final class HTTPClientTests: XCTestCase {
             
             // Act
             let expectation = expectation(description: "HTTP communication failure")
-            client.send(SampleDecodingRequest(), decodingCompletion: { result in
+            client.send(SampleDecodingRequest(), decodingCompletion: { response in
                 defer { expectation.fulfill() }
-                switch result {
+                switch response.result {
                 case .success:
                     XCTFail("The request should fail.")
                 case .failure(let error):
@@ -330,9 +328,10 @@ final class HTTPClientTests: XCTestCase {
         }
         
         // Act
-        let sample = try await client.send(SampleDecodingRequest())
+        let response = await client.send(SampleDecodingRequest())
         
         // Assert
+        let sample = try response.result.get()
         XCTAssertEqual(sample.someProperty, "some property")
     }
     
@@ -343,14 +342,16 @@ final class HTTPClientTests: XCTestCase {
             (HTTPURLResponse(), Data(invalidKeyJSON.utf8))
         }
         
-        do {
-            // Act
-            let _ = try await client.send(SampleDecodingRequest())
-            XCTFail("The request should fail.")
-        } catch AFError.responseSerializationFailed(reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))) {
-            // Assert
-            XCTAssertEqual(codingKey.stringValue, "someProperty")
+        // Act
+        let response = await client.send(SampleDecodingRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        guard case .responseSerializationFailed(reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))) = error else {
+            throw error
         }
+        XCTAssertEqual(codingKey.stringValue, "someProperty")
     }
     
     @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
@@ -364,13 +365,12 @@ final class HTTPClientTests: XCTestCase {
              Data())
         }
         
-        do {
-            // Act
-            let _ = try await client.send(SampleDecodingRequest())
-            XCTFail("The request should fail.")
-        } catch let error as AFError {
-            // Assert
-            XCTAssertEqual(error.responseCode, 404)
-        }
+        // Act
+        let response = await client.send(SampleDecodingRequest())
+        
+        // Assert
+        XCTAssertThrowsError(try response.result.get())
+        let error = try XCTUnwrap(response.error)
+        XCTAssertEqual(error.responseCode, 404)
     }
 }
