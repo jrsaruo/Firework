@@ -182,7 +182,7 @@ final class HTTPClientTests: XCTestCase {
     }
     
     func testSendingAndDecoding() {
-        XCTContext.runActivity(named: "With shared configuration") { _ in
+        XCTContext.runActivity(named: "With default configuration") { _ in
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 // Arrange
                 MockURLProtocol.requestHandler = { [unowned self] _ in
@@ -224,11 +224,14 @@ final class HTTPClientTests: XCTestCase {
         }
         
         XCTContext.runActivity(named: "With custom configuration") { _ in
+            let customConfiguration = HTTPClientConfiguration()
+            customConfiguration.urlSession = .ephemeral
+            customConfiguration.urlSession.protocolClasses = [MockURLProtocol.self]
             XCTContext.runActivity(named: "If preferredJSONDecoder is nil, defaultJSONDecoder will be used.") { _ in
                 // Arrange
-                let customConfiguration = HTTPClientConfiguration()
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .convertFromSnakeCase
-                client.configuration = customConfiguration
+                let client = AFClient(configuration: customConfiguration)
+                
                 MockURLProtocol.requestHandler = { [unowned self] _ in
                     (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
                 }
@@ -248,9 +251,9 @@ final class HTTPClientTests: XCTestCase {
             }
             XCTContext.runActivity(named: "If non-nil preferredJSONDecoder exists, it will be used.") { _ in
                 // Arrange
-                let customConfiguration = HTTPClientConfiguration()
                 customConfiguration.defaultJSONDecoder.keyDecodingStrategy = .useDefaultKeys
-                client.configuration = customConfiguration
+                let client = AFClient(configuration: customConfiguration)
+                
                 MockURLProtocol.requestHandler = { [unowned self] _ in
                     (HTTPURLResponse(), Data(snakeCaseJSON.utf8))
                 }

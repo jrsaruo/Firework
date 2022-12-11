@@ -11,11 +11,10 @@ import Foundation
 
 public final class HTTPClientConfiguration {
     
-    /// The shared configuration.
-    public static let shared = HTTPClientConfiguration()
-    
     /// The configuration used to construct the managed session.
     /// The default value is `.default`.
+    ///
+    /// - Note: Changes to this value after being passed to an initializer of ``HTTPClient`` will have no effect.
     public lazy var urlSession = URLSessionConfiguration.default
     
     /// A default decoder used to decode JSON in the `HTTPClient.send(_:, decodingCompletion:)` method.
@@ -24,14 +23,25 @@ public final class HTTPClientConfiguration {
     /// If you want to use a different decoder for each request,
     /// implement the `preferredJSONDecoder` property in the request type that conforms to the ``DecodingRequest`` protocol.
     public lazy var defaultJSONDecoder = JSONDecoder()
+    
+    public init() {}
 }
 
 // MARK: - HTTPClient -
 
 public struct HTTPClient<Adaptor: HTTPClientAdaptor> {
     
-    public var configuration = HTTPClientConfiguration.shared
-    @usableFromInline let adaptor: Adaptor
+    /*
+     * NOTE:
+     * This is not `public var` property
+     * because changes to the `configuration.urlSession` are not reflected
+     * in the `Alamofire.Session.sessionConfiguration`.
+     * Its customization is limited to only when initializing `HTTPClient`.
+     */
+    let configuration: HTTPClientConfiguration
+    
+    @usableFromInline
+    var adaptor: Adaptor
     
     /// Send a request and receive the simple response.
     /// - Parameters:
