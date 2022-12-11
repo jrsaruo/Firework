@@ -42,7 +42,7 @@ struct HealthCheckRequest: GETRequest {
 // Send a request [async version]
 do {
     let request = HealthCheckRequest()
-    try await AFClient().send(request)
+    try await HTTPClient().send(request)
     print("Healthy!")
 } catch {
     print(error)
@@ -50,7 +50,7 @@ do {
 
 // Send a request [callback version]
 let request = HealthCheckRequest()
-AFClient().send(request) { result in
+HTTPClient().send(request) { result in
     switch result {
     case .success:
         print("Healthy!")
@@ -83,7 +83,7 @@ struct ProfileRequest: POSTRequest, DecodingRequest {
 // Send a request [async version]
 do {
     let request = ProfileRequest(userID: 100)
-    let profile = try await AFClient().send(request)
+    let profile = try await HTTPClient().send(request)
     // The type of `profile` is `Profile`
     print("User name:", profile.name)
 } catch {
@@ -92,7 +92,7 @@ do {
 
 // Send a request [callback version]
 let request = ProfileRequest(userID: 100)
-AFClient().send(request, decodingCompletion: { result in
+HTTPClient().send(request, decodingCompletion: { result in
     switch result {
     case .success(let profile):
         // The type of `profile` is `Profile`
