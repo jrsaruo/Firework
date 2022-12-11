@@ -84,13 +84,12 @@ public struct HTTPClient {
     ///   - decodingCompletion: The handler to be executed once the request and decoding has finished.
     public func send<Request: DecodingRequest>(_ request: Request,
                                                receiveOn queue: DispatchQueue = .main,
-                                               decodingCompletion: @escaping (Result<Request.Response, any Error>) -> Void) {
-        makeDataRequest(from: request).responseData(queue: queue) { response in
-            decodingCompletion(Result {
-                let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
-                return try decoder.decode(Request.Response.self, from: response.result.get())
-            })
-        }
+                                               decodingCompletion: @escaping (Result<Request.Response, AFError>) -> Void) {
+        let decoder = Request.preferredJSONDecoder ?? configuration.defaultJSONDecoder
+        makeDataRequest(from: request)
+            .responseDecodable(queue: queue, decoder: decoder) { response in
+                decodingCompletion(response.result)
+            }
     }
     
     /// Send a request asynchronously and decode the response JSON.

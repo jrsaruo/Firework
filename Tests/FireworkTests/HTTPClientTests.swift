@@ -286,7 +286,9 @@ final class HTTPClientTests: XCTestCase {
                 switch result {
                 case .success:
                     XCTFail("The decoding should fail.")
-                case .failure(DecodingError.keyNotFound(let codingKey, _)):
+                case .failure(.responseSerializationFailed(
+                    reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))
+                )):
                     XCTAssertEqual(codingKey.stringValue, "someProperty")
                 case .failure(let error):
                     XCTFail("Unexpected error: \(error)")
@@ -312,10 +314,8 @@ final class HTTPClientTests: XCTestCase {
                 switch result {
                 case .success:
                     XCTFail("The request should fail.")
-                case .failure(let error as AFError):
-                    XCTAssertEqual(error.responseCode, 404)
                 case .failure(let error):
-                    XCTFail("Unexpected error: \(error)")
+                    XCTAssertEqual(error.responseCode, 404)
                 }
             })
             wait(for: [expectation], timeout: 0.2)
@@ -347,7 +347,7 @@ final class HTTPClientTests: XCTestCase {
             // Act
             let _ = try await client.send(SampleDecodingRequest())
             XCTFail("The request should fail.")
-        } catch DecodingError.keyNotFound(let codingKey, _) {
+        } catch AFError.responseSerializationFailed(reason: .decodingFailed(DecodingError.keyNotFound(let codingKey, _))) {
             // Assert
             XCTAssertEqual(codingKey.stringValue, "someProperty")
         }
