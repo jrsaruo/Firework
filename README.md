@@ -108,7 +108,7 @@ HTTPClient().send(request, decodingCompletion: { response in
 To use the `Firework` library in a SwiftPM project, add the following line to the dependencies in your `Package.swift` file:
 
 ```swift
-.package(url: "https://github.com/jrsaruo/Firework", from: "3.0.1"),
+.package(url: "https://github.com/jrsaruo/Firework", from: "3.0.2"),
 ```
 
 and add `Firework` as a dependency for your target:
