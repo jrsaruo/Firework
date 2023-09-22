@@ -18,7 +18,7 @@ jobs:
     
     steps:
       # Checks-out the repository under $GITHUB_WORKSPACE, so this job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Build for macOS
         run: swift build
@@ -50,7 +50,7 @@ jobs:
       IOS_SIMULATOR: "iPhone 13"
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Build for iOS
         run: xcodebuild build -scheme ${{ env.package }} -destination "name=${{ env.IOS_SIMULATOR }}"
@@ -65,7 +65,7 @@ jobs:
       TVOS_SIMULATOR: "Apple TV"
     
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       
       - name: Build for tvOS
         run: xcodebuild build -scheme ${{ env.package }} -destination "name=${{ env.TVOS_SIMULATOR }}"
