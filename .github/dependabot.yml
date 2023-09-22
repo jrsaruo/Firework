@@ -9,4 +9,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "saturday"
     target-branch: "develop"
+    reviewers:
+      - "jrsaruo"
