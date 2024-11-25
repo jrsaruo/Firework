@@ -36,7 +36,7 @@ jobs:
           > ${{ env.CODECOV_PATH }}
           
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
